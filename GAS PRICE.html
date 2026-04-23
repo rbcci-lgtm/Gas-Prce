@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GasWatch PH — Philippine Fuel Price Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --card: #161a22;
+    --border: #1e2330;
+    --border2: #252d3d;
+    --accent: #f5a623;
+    --accent2: #ff6b35;
+    --green: #22c55e;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --text: #e8edf5;
+    --muted: #6b7a99;
+    --muted2: #8896b3;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,12,16,.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 28px; letter-spacing: 2px;
+    color: var(--accent);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo span { color: var(--text); }
+  .logo-badge {
+    background: var(--accent); color: #000;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    padding: 2px 6px; border-radius: 4px; letter-spacing: 1px;
+  }
+  nav { display: flex; gap: 4px; align-items: center; }
+  nav a, .nav-btn {
+    color: var(--muted2); text-decoration: none;
+    font-size: 14px; font-weight: 500;
+    padding: 8px 14px; border-radius: 8px;
+    transition: all .2s; cursor: pointer; border: none; background: none;
+  }
+  nav a:hover, .nav-btn:hover { color: var(--text); background: var(--border); }
+  nav a.active { color: var(--accent); }
+  .btn-report {
+    background: var(--accent); color: #000 !important;
+    font-weight: 700; padding: 8px 18px !important;
+    border-radius: 8px; border: none; cursor: pointer;
+    transition: all .2s; font-size: 14px; font-family: var(--font-body);
+  }
+  .btn-report:hover { background: #f5b843; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(245,166,35,.35); }
+
+  /* ── HERO TICKER ── */
+  .ticker-bar {
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    padding: 8px 0; overflow: hidden; position: relative;
+  }
+  .ticker-inner {
+    display: flex; gap: 48px; animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+  .ticker-item { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: #000; }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* ── MAIN ── */
+  main { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 48px 0 32px;
+    display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: start;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(48px, 6vw, 80px); line-height: .95;
+    letter-spacing: 3px;
+  }
+  .hero-title .accent { color: var(--accent); }
+  .hero-subtitle { color: var(--muted2); font-size: 15px; margin-top: 12px; max-width: 480px; }
+  .update-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border2);
+    padding: 6px 14px; border-radius: 100px; font-size: 12px;
+    color: var(--green); font-family: var(--font-mono); margin-bottom: 16px;
+  }
+  .pulse-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+  .hero-stats { display: flex; flex-direction: column; gap: 12px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 16px 20px; min-width: 180px; text-align: right;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .stat-val { font-family: var(--font-display); font-size: 32px; color: var(--accent); letter-spacing: 1px; }
+  .stat-unit { font-size: 13px; color: var(--muted2); }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    padding: 20px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .filter-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-right: 4px; }
+  select, input[type=text], input[type=search] {
+    background: var(--card); border: 1px solid var(--border2); color: var(--text);
+    padding: 9px 14px; border-radius: 8px; font-family: var(--font-body); font-size: 14px;
+    outline: none; transition: border-color .2s;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
+  .chip {
+    padding: 7px 14px; border-radius: 100px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border2); background: var(--card); color: var(--muted2);
+    cursor: pointer; transition: all .2s;
+  }
+  .chip:hover, .chip.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  /* ── GRID ── */
+  .section-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
+  }
+  .section-title { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; }
+  .count-badge {
+    background: var(--surface); border: 1px solid var(--border2);
+    font-family: var(--font-mono); font-size: 12px; color: var(--muted2);
+    padding: 4px 10px; border-radius: 6px;
+  }
+
+  .price-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  .price-card {
+    background: var(--card); border: 1px solid var(--border2);
+    border-radius: 16px; overflow: hidden; position: relative;
+    transition: all .3s; cursor: pointer;
+    animation: fadeUp .4s ease both;
+  }
+  .price-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(245,166,35,.12); }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+  .card-img {
+    width: 100%; height: 160px; object-fit: cover; display: block;
+    background: var(--surface);
+  }
+  .card-img-placeholder {
+    width: 100%; height: 160px;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--border) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px; color: var(--border2);
+    position: relative; overflow: hidden;
+  }
+  .brand-logo-wrap {
+    width: 100%; height: 160px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .brand-logo-wrap svg {
+    width: 100%; height: 100%; display: block;
+  }
+  .brand-logo-img {
+    max-height: 110px; max-width: 220px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    transition: transform .3s;
+  }
+  .price-card:hover .brand-logo-img { transform: scale(1.06); }
+  .card-body { padding: 16px; }
+  .card-brand {
+    font-family: var(--font-display); font-size: 22px; letter-spacing: 1px;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .card-location { font-size: 13px; color: var(--muted2); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .card-location svg { flex-shrink: 0; }
+
+  .price-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+  }
+  .price-row:last-child { border-bottom: none; }
+  .fuel-type { font-size: 13px; color: var(--muted2); font-weight: 500; }
+  .fuel-price {
+    font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--text);
+  }
+  .fuel-change { font-size: 11px; margin-left: 6px; }
+  .fuel-change.up { color: var(--red); }
+  .fuel-change.dn { color: var(--green); }
+
+  .card-footer {
+    padding: 10px 16px; background: var(--surface);
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border);
+  }
+  .card-meta { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .card-votes { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted2); }
+  .vote-btn {
+    background: none; border: 1px solid var(--border2); color: var(--muted);
+    padding: 3px 8px; border-radius: 6px; cursor: pointer; font-size: 12px;
+    transition: all .2s;
+  }
+  .vote-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .verified-badge {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(34,197,94,.15); border: 1px solid var(--green);
+    color: var(--green); font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 100px; letter-spacing: 1px;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.75); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    opacity: 0; pointer-events: none; transition: opacity .3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border2);
+    border-radius: 20px; width: 100%; max-width: 560px;
+    max-height: 90vh; overflow-y: auto;
+    transform: scale(.95) translateY(20px); transition: all .3s;
+  }
+  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+  .modal-header {
+    padding: 24px 24px 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-title { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; }
+  .close-btn {
+    background: var(--surface); border: 1px solid var(--border2); color: var(--text);
+    width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+  }
+  .close-btn:hover { background: var(--red); border-color: var(--red); }
+  .modal-body { padding: 24px; }
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 12px; color: var(--muted2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
+  .form-input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); padding: 11px 14px; border-radius: 10px;
+    font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color .2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .price-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .upload-zone {
+    border: 2px dashed var(--border2); border-radius: 12px; padding: 32px;
+    text-align: center; cursor: pointer; transition: all .3s;
+    background: var(--surface);
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(245,166,35,.05); }
+  .upload-icon { font-size: 36px; margin-bottom: 8px; }
+  .upload-text { font-size: 14px; color: var(--muted2); }
+  .upload-text strong { color: var(--accent); }
+  .upload-preview {
+    display: none; position: relative;
+    border-radius: 10px; overflow: hidden; margin-top: 12px;
+  }
+  .upload-preview img { width: 100%; max-height: 200px; object-fit: cover; display: block; }
+  .remove-preview {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,.6); color: #fff; border: none;
+    border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px;
+  }
+  .btn-submit {
+    width: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent));
+    color: #000; border: none; padding: 14px; border-radius: 12px;
+    font-family: var(--font-display); font-size: 22px; letter-spacing: 2px;
+    cursor: pointer; transition: all .3s; margin-top: 8px;
+  }
+  .btn-submit:hover { opacity: .9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,166,35,.3); }
+
+  /* ── MAP SECTION ── */
+  .map-section { margin-top: 48px; }
+  .map-placeholder {
+    background: var(--card); border: 1px solid var(--border2);
+    border-radius: 16px; height: 400px;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    gap: 16px; color: var(--muted2); position: relative; overflow: hidden;
+  }
+  .map-grid {
+    position: absolute; inset: 0;
+    background-image: 
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px; opacity: .5;
+  }
+  .map-pin { font-size: 32px; animation: bounce 2s ease-in-out infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .map-label { font-size: 16px; font-weight: 600; z-index: 1; }
+  .map-sub { font-size: 13px; color: var(--muted); z-index: 1; }
+
+  /* ── REGIONAL TABLE ── */
+  .table-section { margin-top: 48px; }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    background: var(--surface); padding: 12px 16px; text-align: left;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted);
+    border-bottom: 2px solid var(--border2); font-weight: 600;
+  }
+  .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .data-table tr:hover td { background: var(--surface); }
+  .data-table .price-cell { font-family: var(--font-mono); font-weight: 600; }
+  .change-up { color: var(--red); font-family: var(--font-mono); font-size: 12px; }
+  .change-dn { color: var(--green); font-family: var(--font-mono); font-size: 12px; }
+  .region-flag { font-size: 18px; margin-right: 8px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 500;
+    background: var(--green); color: #000; padding: 14px 20px;
+    border-radius: 12px; font-weight: 700; font-size: 14px;
+    transform: translateY(80px); opacity: 0;
+    transition: all .4s cubic-bezier(.34,1.56,.64,1);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border); padding: 32px 24px;
+    max-width: 1280px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-logo { font-family: var(--font-display); font-size: 22px; color: var(--accent); letter-spacing: 2px; }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color .2s; }
+  .footer-links a:hover { color: var(--text); }
+  .footer-credit { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-stats { flex-direction: row; flex-wrap: wrap; }
+    nav a:not(.btn-report) { display: none; }
+    .price-inputs { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-inner" id="tickerInner"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    ⛽ GASWATCH<span>PH</span>
+    <span class="logo-badge">LIVE</span>
+  </div>
+  <nav>
+    <a href="#prices" class="active">Prices</a>
+    <a href="#map">Map</a>
+    <a href="#regional">Regional</a>
+    <button class="nav-btn btn-report" onclick="openModal()">+ Report Price</button>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<main>
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <div class="update-badge">
+        <span class="pulse-dot"></span>
+        <span>LIVE CROWDSOURCED DATA • Updated just now</span>
+      </div>
+      <h1 class="hero-title">
+        PHILIPPINE<br>
+        <span class="accent">FUEL PRICE</span><br>
+        MONITOR
+      </h1>
+      <p class="hero-subtitle">Track gas and oil prices across the Philippines. Reported by Filipinos, for Filipinos. Upload price photos, verify reports, and find the cheapest fuel near you.</p>
+    </div>
+    <div class="hero-stats" id="heroStats"></div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar" id="prices">
+    <span class="filter-label">Filter:</span>
+    <input type="search" id="searchInput" placeholder="🔍  Station, city, barangay..." style="min-width:220px" oninput="filterCards()">
+    <select id="regionFilter" onchange="filterCards()">
+      <option value="">All Regions</option>
+      <option>NCR — Metro Manila</option>
+      <option>Region I — Ilocos</option>
+      <option>Region III — Central Luzon</option>
+      <option>Region IV-A — CALABARZON</option>
+      <option>Region V — Bicol</option>
+      <option>Region VI — Western Visayas</option>
+      <option>Region VII — Central Visayas</option>
+      <option>Region VIII — Eastern Visayas</option>
+      <option>Region IX — Zamboanga</option>
+      <option>Region X — Northern Mindanao</option>
+      <option>Region XI — Davao</option>
+      <option>Region XII — SOCCSKSARGEN</option>
+      <option>CARAGA</option>
+      <option>BARMM</option>
+    </select>
+    <div class="chip active" onclick="filterByFuel(this,'all')">All Fuels</div>
+    <div class="chip" onclick="filterByFuel(this,'diesel')">Diesel</div>
+    <div class="chip" onclick="filterByFuel(this,'gasoline')">Gasoline</div>
+    <div class="chip" onclick="filterByFuel(this,'kerosene')">Kerosene</div>
+    <select id="sortFilter" onchange="filterCards()">
+      <option value="newest">Newest First</option>
+      <option value="lowest">Lowest Price</option>
+      <option value="highest">Highest Price</option>
+      <option value="verified">Verified Only</option>
+    </select>
+  </div>
+
+  <!-- PRICE GRID -->
+  <div class="section-header">
+    <h2 class="section-title">REPORTED PRICES</h2>
+    <span class="count-badge" id="countBadge">0 reports</span>
+  </div>
+  <div class="price-grid" id="priceGrid"></div>
+
+  <!-- MAP SECTION -->
+  <div class="map-section" id="map">
+    <div class="section-header">
+      <h2 class="section-title">PRICE MAP</h2>
+    </div>
+    <div class="map-placeholder">
+      <div class="map-grid"></div>
+      <div class="map-pin">📍</div>
+      <div class="map-label">Interactive Philippines Map</div>
+      <div class="map-sub">Enable location to see stations near you • Powered by community reports</div>
+    </div>
+  </div>
+
+  <!-- REGIONAL TABLE -->
+  <div class="table-section" id="regional">
+    <div class="section-header">
+      <h2 class="section-title">REGIONAL AVERAGES</h2>
+      <span class="count-badge">DOE Reference Prices</span>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border2);border-radius:16px;overflow:hidden">
+      <table class="data-table" id="regionalTable"></table>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div>
+    <div class="footer-logo">⛽ GASWATCH PH</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">Community-powered fuel price monitoring</div>
+  </div>
+  <div class="footer-links">
+    <a href="#">About</a>
+    <a href="#">API</a>
+    <a href="#">Privacy</a>
+    <a href="#">Contact</a>
+  </div>
+  <div class="footer-credit">Data crowdsourced by Filipino contributors 🇵🇭</div>
+</footer>
+
+<!-- REPORT MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">REPORT PRICE</h2>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-group">
+        <label class="form-label">Gas Station Brand *</label>
+        <select class="form-input" id="fBrand">
+          <option value="">Select brand...</option>
+          <option>Petron</option>
+          <option>Shell</option>
+          <option>Caltex</option>
+          <option>Phoenix</option>
+          <option>Seaoil</option>
+          <option>Total</option>
+          <option>Jetti</option>
+          <option>Flying V</option>
+          <option>Metro</option>
+          <option>PTT</option>
+          <option>Independent / No Brand</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Location *</label>
+        <input type="text" class="form-input" id="fCity" placeholder="City / Municipality (e.g. Calbayog City)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address / Landmark</label>
+        <input type="text" class="form-input" id="fAddress" placeholder="Street, Barangay, or Landmark">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Region *</label>
+        <select class="form-input" id="fRegion">
+          <option value="">Select region...</option>
+          <option>NCR — Metro Manila</option>
+          <option>Region I — Ilocos</option>
+          <option>Region II — Cagayan Valley</option>
+          <option>Region III — Central Luzon</option>
+          <option>Region IV-A — CALABARZON</option>
+          <option>Region IV-B — MIMAROPA</option>
+          <option>Region V — Bicol</option>
+          <option>Region VI — Western Visayas</option>
+          <option>Region VII — Central Visayas</option>
+          <option>Region VIII — Eastern Visayas</option>
+          <option>Region IX — Zamboanga Peninsula</option>
+          <option>Region X — Northern Mindanao</option>
+          <option>Region XI — Davao Region</option>
+          <option>Region XII — SOCCSKSARGEN</option>
+          <option>Region XIII — CARAGA</option>
+          <option>BARMM</option>
+          <option>CAR — Cordillera</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Prices (₱ per Liter) — fill what you see</label>
+        <div class="price-inputs">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">⛽ Gasoline Ron91</div>
+            <input type="number" class="form-input" id="fGas91" placeholder="e.g. 58.50" step="0.01" min="0">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">⛽ Gasoline Ron95</div>
+            <input type="number" class="form-input" id="fGas95" placeholder="e.g. 62.50" step="0.01" min="0">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">⛽ Gasoline Ron97</div>
+            <input type="number" class="form-input" id="fGas97" placeholder="e.g. 66.50" step="0.01" min="0">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">🛢 Diesel</div>
+            <input type="number" class="form-input" id="fDiesel" placeholder="e.g. 54.20" step="0.01" min="0">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">🛢 Premium Diesel</div>
+            <input type="number" class="form-input" id="fPremDiesel" placeholder="e.g. 57.00" step="0.01" min="0">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">🪔 Kerosene</div>
+            <input type="number" class="form-input" id="fKerosene" placeholder="e.g. 50.10" step="0.01" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Upload Photo of Price Board</label>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+          ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
+          <div class="upload-icon">📸</div>
+          <div class="upload-text">
+            <strong>Tap to upload</strong> or drag &amp; drop<br>
+            <span style="font-size:12px">JPG, PNG, HEIC up to 10MB • Price board photos verify your report</span>
+          </div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+        <div class="upload-preview" id="uploadPreview">
+          <img id="previewImg" src="" alt="Preview">
+          <button class="remove-preview" onclick="removePreview()">✕ Remove</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Reporter Name (optional)</label>
+        <input type="text" class="form-input" id="fReporter" placeholder="Your name or anonymous">
+      </div>
+
+      <button class="btn-submit" onclick="submitReport()">SUBMIT PRICE REPORT</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✅ Price report submitted! Thank you!</div>
+
+<script>
+// ── SEED DATA ──
+const SEED = [
+  { id:1, brand:'Petron', city:'Calbayog City', address:'Barangay Central, T. Bugallon St.', region:'Region VIII — Eastern Visayas', gas91:57.75, gas95:62.15, gas97:0, diesel:53.80, premDiesel:56.10, kerosene:0, verified:true, reporter:'Jun R.', time: Date.now()-3600000*1, votes:12, img:'', lat:12.07, lng:124.60 },
+  { id:2, brand:'Shell', city:'Quezon City', address:'EDSA Cor. Timog Ave.', region:'NCR — Metro Manila', gas91:58.50, gas95:63.20, gas97:66.80, diesel:54.50, premDiesel:57.30, kerosene:0, verified:true, reporter:'Maria S.', time: Date.now()-3600000*2, votes:34, img:'', lat:14.65, lng:121.03 },
+  { id:3, brand:'Caltex', city:'Cebu City', address:'N. Bacalso Ave., Brgy. Cogon Ramos', region:'Region VII — Central Visayas', gas91:57.95, gas95:62.55, gas97:65.90, diesel:54.20, premDiesel:0, kerosene:49.80, verified:false, reporter:'Bobby T.', time: Date.now()-3600000*5, votes:8, img:'', lat:10.31, lng:123.89 },
+  { id:4, brand:'Phoenix', city:'Davao City', address:'Lanang, JP Laurel Ave.', region:'Region XI — Davao Region', gas91:57.35, gas95:61.90, gas97:0, diesel:53.60, premDiesel:56.00, kerosene:49.50, verified:true, reporter:'Grace M.', time: Date.now()-3600000*3, votes:21, img:'', lat:7.09, lng:125.61 },
+  { id:5, brand:'Seaoil', city:'Makati City', address:'Gil Puyat Ave., Brgy. Bangkal', region:'NCR — Metro Manila', gas91:57.99, gas95:62.80, gas97:66.50, diesel:54.10, premDiesel:56.90, kerosene:0, verified:true, reporter:'Paolo D.', time: Date.now()-3600000*7, votes:19, img:'', lat:14.55, lng:121.01 },
+  { id:6, brand:'Jetti', city:'Tacloban City', address:'Real St., Brgy. 40', region:'Region VIII — Eastern Visayas', gas91:58.10, gas95:62.90, gas97:0, diesel:54.00, premDiesel:0, kerosene:50.20, verified:false, reporter:'Lito V.', time: Date.now()-3600000*9, votes:5, img:'', lat:11.24, lng:125.00 },
+  { id:7, brand:'Total', city:'Iloilo City', address:'Benigno Aquino Ave., Mandurriao', region:'Region VI — Western Visayas', gas91:57.60, gas95:62.30, gas97:65.70, diesel:53.95, premDiesel:56.20, kerosene:49.60, verified:true, reporter:'Nena B.', time: Date.now()-3600000*11, votes:16, img:'', lat:10.72, lng:122.56 },
+  { id:8, brand:'Petron', city:'General Santos City', address:'National Highway, Calumpang', region:'Region XII — SOCCSKSARGEN', gas91:57.45, gas95:62.05, gas97:0, diesel:53.70, premDiesel:55.80, kerosene:49.40, verified:false, reporter:'Rodel C.', time: Date.now()-3600000*14, votes:7, img:'', lat:6.11, lng:125.17 },
+];
+
+const REGIONAL = [
+  { region:'NCR — Metro Manila', flag:'🏙️', diesel:54.30, gas91:58.25, gas95:63.00, kerosene:0, change:+0.50 },
+  { region:'Region I — Ilocos', flag:'🌾', diesel:53.95, gas91:57.80, gas95:62.40, kerosene:49.70, change:-0.20 },
+  { region:'Region III — Central Luzon', flag:'🌾', diesel:54.10, gas91:57.90, gas95:62.50, kerosene:49.80, change:+0.30 },
+  { region:'Region IV-A — CALABARZON', flag:'🏭', diesel:54.20, gas91:58.00, gas95:62.60, kerosene:0, change:+0.10 },
+  { region:'Region VII — Central Visayas', flag:'🌊', diesel:54.00, gas91:57.75, gas95:62.35, kerosene:49.60, change:-0.10 },
+  { region:'Region VIII — Eastern Visayas', flag:'🌺', diesel:53.80, gas91:57.70, gas95:62.10, kerosene:50.10, change:+0.20 },
+  { region:'Region XI — Davao Region', flag:'🦅', diesel:53.65, gas91:57.40, gas95:62.00, kerosene:49.50, change:-0.30 },
+  { region:'BARMM', flag:'☪️', diesel:53.50, gas91:57.20, gas95:61.80, kerosene:49.30, change:+0.00 },
+];
+
+let reports = JSON.parse(localStorage.getItem('gwph_reports') || 'null') || [...SEED];
+let nextId = Math.max(...reports.map(r=>r.id)) + 1;
+let currentFuelFilter = 'all';
+let previewDataUrl = null;
+
+function saveReports() { localStorage.setItem('gwph_reports', JSON.stringify(reports)); }
+
+function timeAgo(ts) {
+  const d = Date.now() - ts;
+  if(d < 60000) return 'Just now';
+  if(d < 3600000) return Math.floor(d/60000)+'m ago';
+  if(d < 86400000) return Math.floor(d/3600000)+'h ago';
+  return Math.floor(d/86400000)+'d ago';
+}
+
+function fuelTypesForReport(r) {
+  const types = [];
+  if(r.gas91 > 0) types.push({ label:'RON 91', price:r.gas91, type:'gasoline' });
+  if(r.gas95 > 0) types.push({ label:'RON 95', price:r.gas95, type:'gasoline' });
+  if(r.gas97 > 0) types.push({ label:'RON 97', price:r.gas97, type:'gasoline' });
+  if(r.diesel > 0) types.push({ label:'Diesel', price:r.diesel, type:'diesel' });
+  if(r.premDiesel > 0) types.push({ label:'Premium Diesel', price:r.premDiesel, type:'diesel' });
+  if(r.kerosene > 0) types.push({ label:'Kerosene', price:r.kerosene, type:'kerosene' });
+  return types;
+}
+
+// ── BRAND LOGOS — real logos from Wikimedia CDN (works online; graceful fallback offline) ──
+const BRAND_LOGOS = {
+  'Petron':   {
+    bg: '#002d72',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Logo_of_Petron.svg/320px-Logo_of_Petron.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Logo_of_Petron.svg'
+  },
+  'Shell':    {
+    bg: '#fbfbfb',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Shell_logo.svg/320px-Shell_logo.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Shell_logo.svg'
+  },
+  'Caltex':   {
+    bg: '#cc0000',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Caltex_brand_logo.svg/320px-Caltex_brand_logo.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/5/54/Caltex_brand_logo.svg'
+  },
+  'Phoenix':  {
+    bg: '#1a1a2e',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Phoenix_Petroleum_logo.svg/320px-Phoenix_Petroleum_logo.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/b/b7/Phoenix_Petroleum_logo.svg'
+  },
+  'Seaoil':   {
+    bg: '#003087',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Seaoil_logo.svg/320px-Seaoil_logo.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/Seaoil_logo.svg'
+  },
+  'Total':    {
+    bg: '#ee2d24',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/TotalEnergies_logo.svg/320px-TotalEnergies_logo.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/6/65/TotalEnergies_logo.svg'
+  },
+  'Jetti':    {
+    bg: '#00529b',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Jetti_Petroleum_logo.svg/320px-Jetti_Petroleum_logo.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/1/10/Jetti_Petroleum_logo.svg'
+  },
+  'Flying V': {
+    bg: '#e30613',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flying_V_logo.svg/320px-Flying_V_logo.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Flying_V_logo.svg'
+  },
+  'Metro':    {
+    bg: '#1b4332',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Metro_Petroleum_logo.svg/320px-Metro_Petroleum_logo.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/2/2e/Metro_Petroleum_logo.svg'
+  },
+  'PTT':      {
+    bg: '#007c3e',
+    src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/PTT_Public_Company_logo.svg/320px-PTT_Public_Company_logo.svg.png',
+    fallback: 'https://upload.wikimedia.org/wikipedia/commons/d/d5/PTT_Public_Company_logo.svg'
+  },
+};
+
+// Offline fallback text banners (shown if image fails to load)
+const BRAND_FALLBACK = {
+  'Petron':   { bg:'#002d72', color:'#e8192c' },
+  'Shell':    { bg:'#dd1d21', color:'#f7b600' },
+  'Caltex':   { bg:'#cc0000', color:'#ffffff' },
+  'Phoenix':  { bg:'#1a1a2e', color:'#e94560' },
+  'Seaoil':   { bg:'#003087', color:'#00aeef' },
+  'Total':    { bg:'#ee2d24', color:'#f7a600' },
+  'Jetti':    { bg:'#00529b', color:'#ffd700' },
+  'Flying V': { bg:'#e30613', color:'#ffffff' },
+  'Metro':    { bg:'#1b4332', color:'#95d5b2' },
+  'PTT':      { bg:'#007c3e', color:'#ffc72c' },
+};
+
+function getBrandBanner(r) {
+  if(r.img) return `<img class="card-img" src="${r.img}" alt="Price board">`;
+  const logo = BRAND_LOGOS[r.brand];
+  const fb = BRAND_FALLBACK[r.brand];
+  if(logo) {
+    return `<div class="brand-logo-wrap" style="background:${logo.bg}" id="wrap-${r.id}">
+      <img class="brand-logo-img"
+        src="${logo.src}"
+        alt="${r.brand}"
+        onerror="this.onerror=null;this.src='${logo.fallback}';this.onerror=function(){
+          var w=document.getElementById('wrap-${r.id}');
+          if(w){w.style.background='${fb?fb.bg:logo.bg}';w.innerHTML='<span style=\\'font-family:Arial Black,sans-serif;font-size:28px;font-weight:900;color:${fb?fb.color:\\'#fff\\'};letter-spacing:2px\\'>${r.brand}</span>';}
+        };">
+    </div>`;
+  }
+  return `<div class="card-img-placeholder">⛽</div>`;
+}
+
+function renderCard(r) {
+  const types = fuelTypesForReport(r);
+  if(currentFuelFilter !== 'all' && !types.some(t=>t.type===currentFuelFilter)) return '';
+
+  const imgHTML = getBrandBanner(r);
+
+  const priceRows = types.map(t => `
+    <div class="price-row">
+      <span class="fuel-type">${t.label}</span>
+      <span class="fuel-price">₱${t.price.toFixed(2)}<span class="fuel-change">/L</span></span>
+    </div>`).join('');
+
+  const verBadge = r.verified ? `<span class="verified-badge">✓ VERIFIED</span>` : '';
+
+  return `
+    <div class="price-card" style="animation-delay:${Math.random()*.2}s" id="card-${r.id}">
+      ${imgHTML}
+      ${verBadge}
+      <div class="card-body">
+        <div class="card-brand">${r.brand}</div>
+        <div class="card-location">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${r.city}${r.address ? ' — '+r.address : ''}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-family:var(--font-mono)">${r.region}</div>
+        ${priceRows}
+      </div>
+      <div class="card-footer">
+        <div class="card-meta">
+          ${r.reporter ? '👤 '+r.reporter+' • ' : ''}${timeAgo(r.time)}
+        </div>
+        <div class="card-votes">
+          <button class="vote-btn" onclick="vote(${r.id})">👍 ${r.votes}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function filterCards() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const region = document.getElementById('regionFilter').value;
+  const sort = document.getElementById('sortFilter').value;
+
+  let filtered = reports.filter(r => {
+    const text = (r.brand+r.city+r.address+r.region).toLowerCase();
+    const matchSearch = !search || text.includes(search);
+    const matchRegion = !region || r.region === region;
+    return matchSearch && matchRegion;
+  });
+
+  if(sort === 'lowest') filtered.sort((a,b) => Math.min(a.diesel||99,a.gas91||99,a.gas95||99) - Math.min(b.diesel||99,b.gas91||99,b.gas95||99));
+  else if(sort === 'highest') filtered.sort((a,b) => Math.max(b.diesel||0,b.gas91||0,b.gas95||0) - Math.max(a.diesel||0,a.gas91||0,a.gas95||0));
+  else if(sort === 'verified') filtered = filtered.filter(r=>r.verified).sort((a,b)=>b.time-a.time);
+  else filtered.sort((a,b)=>b.time-a.time);
+
+  document.getElementById('priceGrid').innerHTML = filtered.map(renderCard).join('') || '<div style="padding:40px;color:var(--muted);text-align:center;grid-column:1/-1">No reports found for this filter.</div>';
+  document.getElementById('countBadge').textContent = filtered.length + ' report' + (filtered.length!==1?'s':'');
+}
+
+function filterByFuel(el, type) {
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  currentFuelFilter = type;
+  filterCards();
+}
+
+function vote(id) {
+  const r = reports.find(x=>x.id===id);
+  if(r) { r.votes++; saveReports(); filterCards(); }
+}
+
+// ── HERO STATS ──
+function renderHeroStats() {
+  const allPrices = reports.flatMap(fuelTypesForReport);
+  const diesels = reports.filter(r=>r.diesel>0).map(r=>r.diesel);
+  const gases = reports.filter(r=>r.gas95>0).map(r=>r.gas95);
+  const avgDiesel = diesels.length ? (diesels.reduce((a,b)=>a+b,0)/diesels.length).toFixed(2) : '--';
+  const avgGas = gases.length ? (gases.reduce((a,b)=>a+b,0)/gases.length).toFixed(2) : '--';
+
+  document.getElementById('heroStats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Avg. Diesel</div>
+      <div class="stat-val">₱${avgDiesel}</div>
+      <div class="stat-unit">per liter</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg. RON 95</div>
+      <div class="stat-val">₱${avgGas}</div>
+      <div class="stat-unit">per liter</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Reports</div>
+      <div class="stat-val">${reports.length}</div>
+      <div class="stat-unit">nationwide</div>
+    </div>`;
+}
+
+// ── TICKER ──
+function renderTicker() {
+  const items = reports.slice(0,8).flatMap(r => {
+    const t = fuelTypesForReport(r);
+    return t.slice(0,2).map(f => `<span class="ticker-item">📍 ${r.brand} ${r.city} — ${f.label}: ₱${f.price.toFixed(2)}/L</span>`);
+  });
+  const doubled = [...items,...items].join('');
+  document.getElementById('tickerInner').innerHTML = doubled;
+}
+
+// ── REGIONAL TABLE ──
+function renderRegionalTable() {
+  const thead = `<thead><tr>
+    <th>Region</th>
+    <th>Diesel</th>
+    <th>RON 91</th>
+    <th>RON 95</th>
+    <th>Kerosene</th>
+    <th>Week Change</th>
+  </tr></thead>`;
+  const rows = REGIONAL.map(r => {
+    const chg = r.change === 0 ? `<span style="color:var(--muted)">—</span>` :
+      r.change > 0 ? `<span class="change-up">▲ +${r.change.toFixed(2)}</span>` :
+      `<span class="change-dn">▼ ${r.change.toFixed(2)}</span>`;
+    return `<tr>
+      <td><span class="region-flag">${r.flag}</span>${r.region}</td>
+      <td class="price-cell">₱${r.diesel.toFixed(2)}</td>
+      <td class="price-cell">₱${r.gas91.toFixed(2)}</td>
+      <td class="price-cell">₱${r.gas95.toFixed(2)}</td>
+      <td class="price-cell">${r.kerosene ? '₱'+r.kerosene.toFixed(2) : '—'}</td>
+      <td>${chg}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('regionalTable').innerHTML = thead + '<tbody>' + rows + '</tbody>';
+}
+
+// ── MODAL ──
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function handleOverlayClick(e) { if(e.target===document.getElementById('modalOverlay')) closeModal(); }
+
+// ── UPLOAD ──
+function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('dragover'); }
+function handleDragLeave(e) { document.getElementById('uploadZone').classList.remove('dragover'); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if(file && file.type.startsWith('image/')) processFile(file);
+}
+function handleFileSelect(e) { const file = e.target.files[0]; if(file) processFile(file); }
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    previewDataUrl = e.target.result;
+    document.getElementById('previewImg').src = previewDataUrl;
+    document.getElementById('uploadPreview').style.display = 'block';
+    document.getElementById('uploadZone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function removePreview() {
+  previewDataUrl = null;
+  document.getElementById('uploadPreview').style.display = 'none';
+  document.getElementById('uploadZone').style.display = 'block';
+  document.getElementById('fileInput').value = '';
+}
+
+// ── SUBMIT ──
+function submitReport() {
+  const brand = document.getElementById('fBrand').value;
+  const city = document.getElementById('fCity').value.trim();
+  const region = document.getElementById('fRegion').value;
+  if(!brand) return alert('Please select a gas station brand.');
+  if(!city) return alert('Please enter the city or municipality.');
+  if(!region) return alert('Please select a region.');
+
+  const vals = ['fGas91','fGas95','fGas97','fDiesel','fPremDiesel','fKerosene'].map(id => parseFloat(document.getElementById(id).value)||0);
+  if(vals.every(v=>v===0)) return alert('Please enter at least one fuel price.');
+
+  const newReport = {
+    id: nextId++,
+    brand, city,
+    address: document.getElementById('fAddress').value.trim(),
+    region,
+    gas91:vals[0], gas95:vals[1], gas97:vals[2],
+    diesel:vals[3], premDiesel:vals[4], kerosene:vals[5],
+    verified: false,
+    reporter: document.getElementById('fReporter').value.trim() || 'Anonymous',
+    time: Date.now(),
+    votes: 0,
+    img: previewDataUrl || ''
+  };
+
+  reports.unshift(newReport);
+  saveReports();
+  closeModal();
+
+  // reset form
+  ['fBrand','fCity','fAddress','fRegion','fReporter'].forEach(id=>{ const el=document.getElementById(id); if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; });
+  ['fGas91','fGas95','fGas97','fDiesel','fPremDiesel','fKerosene'].forEach(id=>document.getElementById(id).value='');
+  removePreview();
+
+  renderHeroStats();
+  renderTicker();
+  filterCards();
+
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+// ── INIT ──
+renderHeroStats();
+renderTicker();
+renderRegionalTable();
+filterCards();
+</script>
+</body>
+</html>
