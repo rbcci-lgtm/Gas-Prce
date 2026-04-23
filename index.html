@@ -727,17 +727,36 @@ function getBrandBanner(r) {
   const logo = BRAND_LOGOS[r.brand];
   const fb = BRAND_FALLBACK[r.brand];
   if(logo) {
-    return `<div class="brand-logo-wrap" style="background:${logo.bg}" id="wrap-${r.id}">
+    return `<div class="brand-logo-wrap" style="background:${logo.bg}">
       <img class="brand-logo-img"
         src="${logo.src}"
+        data-fallback="${logo.fallback}"
+        data-brand="${r.brand}"
+        data-bg="${fb ? fb.bg : logo.bg}"
+        data-color="${fb ? fb.color : '#fff'}"
         alt="${r.brand}"
-        onerror="this.onerror=null;this.src='${logo.fallback}';this.onerror=function(){
-          var w=document.getElementById('wrap-${r.id}');
-          if(w){w.style.background='${fb?fb.bg:logo.bg}';w.innerHTML='<span style=\\'font-family:Arial Black,sans-serif;font-size:28px;font-weight:900;color:${fb?fb.color:\\'#fff\\'};letter-spacing:2px\\'>${r.brand}</span>';}
-        };">
+        onerror="handleLogoError(this)">
     </div>`;
   }
   return `<div class="card-img-placeholder">⛽</div>`;
+}
+
+function handleLogoError(img) {
+  const fallback = img.getAttribute('data-fallback');
+  if(img.src !== fallback && fallback) {
+    img.onerror = function() {
+      // Both URLs failed — show text banner
+      const wrap = img.parentElement;
+      const brand = img.getAttribute('data-brand');
+      const bg = img.getAttribute('data-bg');
+      const color = img.getAttribute('data-color');
+      if(wrap) {
+        wrap.style.background = bg;
+        wrap.innerHTML = '<span style="font-family:Arial Black,sans-serif;font-size:26px;font-weight:900;color:' + color + ';letter-spacing:2px;padding:0 16px;text-align:center">' + brand + '</span>';
+      }
+    };
+    img.src = fallback;
+  }
 }
 
 function renderCard(r) {
