@@ -364,6 +364,8 @@
     .price-inputs { grid-template-columns: 1fr; }
   }
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <body>
 
@@ -449,13 +451,9 @@
   <div class="map-section" id="map">
     <div class="section-header">
       <h2 class="section-title">PRICE MAP</h2>
+      <button onclick="locateUser()" style="background:var(--accent);color:#000;font-weight:700;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;">📍 Locate Me</button>
     </div>
-    <div class="map-placeholder">
-      <div class="map-grid"></div>
-      <div class="map-pin">📍</div>
-      <div class="map-label">Interactive Philippines Map</div>
-      <div class="map-sub">Enable location to see stations near you • Powered by community reports</div>
-    </div>
+    <div id="leafletMap" style="width:100%;height:480px;border-radius:16px;border:1px solid var(--border2);overflow:hidden;z-index:1;"></div>
   </div>
 
   <!-- REGIONAL TABLE -->
@@ -742,6 +740,7 @@ function filterCards() {
   else filtered.sort((a,b)=>b.time-a.time);
 
   document.getElementById('priceGrid').innerHTML = filtered.map(renderCard).join('') || '<div style="padding:40px;color:var(--muted);text-align:center;grid-column:1/-1">No reports found for this filter.</div>';
+  renderMapMarkers();
   document.getElementById('countBadge').textContent = filtered.length + ' report' + (filtered.length!==1?'s':'');
 }
 
@@ -900,6 +899,109 @@ function submitReport() {
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 3500);
 }
+
+// ── INTERACTIVE MAP (Leaflet + OpenStreetMap) ──
+let leafletMap = null;
+let userMarker = null;
+let stationMarkers = [];
+
+const BRAND_COLORS = {
+  'Petron': '#002d72', 'Shell': '#dd1d21', 'Caltex': '#cc0000',
+  'Phoenix': '#e94560', 'Seaoil': '#003087', 'Total': '#ee2d24',
+  'Jetti': '#00529b', 'Flying V': '#e30613', 'Metro': '#1b4332', 'PTT': '#007c3e'
+};
+
+function getBrandColor(brand) {
+  return BRAND_COLORS[brand] || '#f5a623';
+}
+
+function makeStationIcon(brand) {
+  const color = getBrandColor(brand);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
+    <path d="M18 0 C8 0 0 8 0 18 C0 30 18 44 18 44 C18 44 36 30 36 18 C36 8 28 0 18 0Z" fill="${color}" stroke="#fff" stroke-width="2"/>
+    <circle cx="18" cy="18" r="10" fill="white" opacity="0.9"/>
+    <text x="18" y="23" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="9" font-weight="900" fill="${color}">${brand.substring(0,3).toUpperCase()}</text>
+  </svg>`;
+  return L.divIcon({
+    html: svg,
+    iconSize: [36, 44],
+    iconAnchor: [18, 44],
+    popupAnchor: [0, -44],
+    className: ''
+  });
+}
+
+function initMap() {
+  if(leafletMap) return;
+  leafletMap = L.map('leafletMap', {
+    center: [12.0, 122.5],
+    zoom: 6,
+    zoomControl: true
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(leafletMap);
+
+  renderMapMarkers();
+}
+
+function renderMapMarkers() {
+  if(!leafletMap) return;
+  // Clear old markers
+  stationMarkers.forEach(m => leafletMap.removeLayer(m));
+  stationMarkers = [];
+
+  reports.forEach(r => {
+    if(!r.lat || !r.lng) return;
+    const prices = [];
+    if(r.diesel > 0) prices.push(`<tr><td>Diesel</td><td>₱${r.diesel.toFixed(2)}</td></tr>`);
+    if(r.gas91 > 0) prices.push(`<tr><td>RON 91</td><td>₱${r.gas91.toFixed(2)}</td></tr>`);
+    if(r.gas95 > 0) prices.push(`<tr><td>RON 95</td><td>₱${r.gas95.toFixed(2)}</td></tr>`);
+    if(r.gas97 > 0) prices.push(`<tr><td>RON 97</td><td>₱${r.gas97.toFixed(2)}</td></tr>`);
+    if(r.kerosene > 0) prices.push(`<tr><td>Kerosene</td><td>₱${r.kerosene.toFixed(2)}</td></tr>`);
+
+    const popup = `
+      <div style="font-family:sans-serif;min-width:180px">
+        <div style="font-weight:900;font-size:15px;color:${getBrandColor(r.brand)};margin-bottom:4px">${r.brand}</div>
+        <div style="font-size:12px;color:#666;margin-bottom:8px">📍 ${r.city}${r.address ? ' — '+r.address : ''}</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <tr style="background:#f5f5f5"><th style="padding:4px 8px;text-align:left">Fuel</th><th style="padding:4px 8px;text-align:right">Price/L</th></tr>
+          ${prices.join('')}
+        </table>
+        ${r.verified ? '<div style="margin-top:6px;color:green;font-size:11px;font-weight:700">✓ VERIFIED</div>' : ''}
+        <div style="margin-top:4px;font-size:10px;color:#999">👤 ${r.reporter} • ${timeAgo(r.time)}</div>
+      </div>`;
+
+    const marker = L.marker([r.lat, r.lng], { icon: makeStationIcon(r.brand) })
+      .bindPopup(popup, { maxWidth: 240 })
+      .addTo(leafletMap);
+    stationMarkers.push(marker);
+  });
+}
+
+function locateUser() {
+  if(!leafletMap) initMap();
+  if(!navigator.geolocation) { alert('Geolocation not supported by your browser.'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    if(userMarker) leafletMap.removeLayer(userMarker);
+    userMarker = L.circleMarker([lat, lng], {
+      radius: 10, fillColor: '#f5a623', color: '#fff',
+      weight: 3, opacity: 1, fillOpacity: 0.9
+    }).bindPopup('<b>📍 You are here</b>').addTo(leafletMap);
+    leafletMap.setView([lat, lng], 13);
+    userMarker.openPopup();
+  }, () => alert('Unable to get your location. Please allow location access.'));
+}
+
+// Auto-init map when scrolled into view
+const mapObserver = new IntersectionObserver(entries => {
+  if(entries[0].isIntersecting) { initMap(); mapObserver.disconnect(); }
+}, { threshold: 0.1 });
+const mapEl = document.getElementById('leafletMap');
+if(mapEl) mapObserver.observe(mapEl);
 
 // ── INIT ──
 renderHeroStats();
