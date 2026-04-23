@@ -402,7 +402,7 @@
         <span class="accent">FUEL PRICE</span><br>
         MONITOR
       </h1>
-      <p class="hero-subtitle">Track gas and oil prices across the Philippines. Reported by Filipinos, for Filipinos. Upload price photos, verify reports, and find the cheapest fuel near you.</p>
+      <p class="hero-subtitle">Track gas and oil prices across the Philippines. Reported by Filipinos, for Filipinos. Upload price photos, verify reports, and find the cheapest fuel near you. <span style="display:inline-block;margin-top:8px;font-size:12px;color:var(--accent);font-family:var(--font-mono)">📅 Prices as of April 23, 2026 • National avg: RON91 ₱94.40 | RON95 ₱98.86 | Diesel ₱104.16 (DOE)</span></p>
     </div>
     <div class="hero-stats" id="heroStats"></div>
   </div>
@@ -605,29 +605,38 @@
 <script>
 // ── SEED DATA ──
 const SEED = [
-  { id:1, brand:'Petron', city:'Calbayog City', address:'Barangay Central, T. Bugallon St.', region:'Region VIII — Eastern Visayas', gas91:57.75, gas95:62.15, gas97:0, diesel:53.80, premDiesel:56.10, kerosene:0, verified:true, reporter:'Jun R.', time: Date.now()-3600000*1, votes:12, img:'', lat:12.07, lng:124.60 },
-  { id:2, brand:'Shell', city:'Quezon City', address:'EDSA Cor. Timog Ave.', region:'NCR — Metro Manila', gas91:58.50, gas95:63.20, gas97:66.80, diesel:54.50, premDiesel:57.30, kerosene:0, verified:true, reporter:'Maria S.', time: Date.now()-3600000*2, votes:34, img:'', lat:14.65, lng:121.03 },
-  { id:3, brand:'Caltex', city:'Cebu City', address:'N. Bacalso Ave., Brgy. Cogon Ramos', region:'Region VII — Central Visayas', gas91:57.95, gas95:62.55, gas97:65.90, diesel:54.20, premDiesel:0, kerosene:49.80, verified:false, reporter:'Bobby T.', time: Date.now()-3600000*5, votes:8, img:'', lat:10.31, lng:123.89 },
-  { id:4, brand:'Phoenix', city:'Davao City', address:'Lanang, JP Laurel Ave.', region:'Region XI — Davao Region', gas91:57.35, gas95:61.90, gas97:0, diesel:53.60, premDiesel:56.00, kerosene:49.50, verified:true, reporter:'Grace M.', time: Date.now()-3600000*3, votes:21, img:'', lat:7.09, lng:125.61 },
-  { id:5, brand:'Seaoil', city:'Makati City', address:'Gil Puyat Ave., Brgy. Bangkal', region:'NCR — Metro Manila', gas91:57.99, gas95:62.80, gas97:66.50, diesel:54.10, premDiesel:56.90, kerosene:0, verified:true, reporter:'Paolo D.', time: Date.now()-3600000*7, votes:19, img:'', lat:14.55, lng:121.01 },
-  { id:6, brand:'Jetti', city:'Tacloban City', address:'Real St., Brgy. 40', region:'Region VIII — Eastern Visayas', gas91:58.10, gas95:62.90, gas97:0, diesel:54.00, premDiesel:0, kerosene:50.20, verified:false, reporter:'Lito V.', time: Date.now()-3600000*9, votes:5, img:'', lat:11.24, lng:125.00 },
-  { id:7, brand:'Total', city:'Iloilo City', address:'Benigno Aquino Ave., Mandurriao', region:'Region VI — Western Visayas', gas91:57.60, gas95:62.30, gas97:65.70, diesel:53.95, premDiesel:56.20, kerosene:49.60, verified:true, reporter:'Nena B.', time: Date.now()-3600000*11, votes:16, img:'', lat:10.72, lng:122.56 },
-  { id:8, brand:'Petron', city:'General Santos City', address:'National Highway, Calumpang', region:'Region XII — SOCCSKSARGEN', gas91:57.45, gas95:62.05, gas97:0, diesel:53.70, premDiesel:55.80, kerosene:49.40, verified:false, reporter:'Rodel C.', time: Date.now()-3600000*14, votes:7, img:'', lat:6.11, lng:125.17 },
+  { id:1, brand:'Petron', city:'Calbayog City', address:'Barangay Central, T. Bugallon St.', region:'Region VIII — Eastern Visayas', gas91:97.50, gas95:101.75, gas97:0, diesel:109.50, premDiesel:113.25, kerosene:98.50, verified:true, reporter:'Jun R.', time: Date.now()-3600000*1, votes:12, img:'', lat:12.07, lng:124.60 },
+  { id:2, brand:'Shell', city:'Quezon City', address:'EDSA Cor. Timog Ave.', region:'NCR — Metro Manila', gas91:91.30, gas95:95.80, gas97:107.50, diesel:101.13, premDiesel:105.40, kerosene:95.20, verified:true, reporter:'Maria S.', time: Date.now()-3600000*2, votes:34, img:'', lat:14.65, lng:121.03 },
+  { id:3, brand:'Caltex', city:'Cebu City', address:'N. Bacalso Ave., Brgy. Cogon Ramos', region:'Region VII — Central Visayas', gas91:95.10, gas95:99.45, gas97:110.20, diesel:106.80, premDiesel:0, kerosene:97.30, verified:false, reporter:'Bobby T.', time: Date.now()-3600000*5, votes:8, img:'', lat:10.31, lng:123.89 },
+  { id:4, brand:'Phoenix', city:'Davao City', address:'Lanang, JP Laurel Ave.', region:'Region XI — Davao Region', gas91:96.20, gas95:100.60, gas97:0, diesel:108.40, premDiesel:112.10, kerosene:97.80, verified:true, reporter:'Grace M.', time: Date.now()-3600000*3, votes:21, img:'', lat:7.09, lng:125.61 },
+  { id:5, brand:'Seaoil', city:'Makati City', address:'Gil Puyat Ave., Brgy. Bangkal', region:'NCR — Metro Manila', gas91:84.32, gas95:88.95, gas97:105.80, diesel:100.00, premDiesel:103.50, kerosene:0, verified:true, reporter:'Paolo D.', time: Date.now()-3600000*7, votes:19, img:'', lat:14.55, lng:121.01 },
+  { id:6, brand:'Jetti', city:'Tacloban City', address:'Real St., Brgy. 40', region:'Region VIII — Eastern Visayas', gas91:98.10, gas95:102.50, gas97:0, diesel:110.20, premDiesel:0, kerosene:99.10, verified:false, reporter:'Lito V.', time: Date.now()-3600000*9, votes:5, img:'', lat:11.24, lng:125.00 },
+  { id:7, brand:'Total', city:'Iloilo City', address:'Benigno Aquino Ave., Mandurriao', region:'Region VI — Western Visayas', gas91:94.80, gas95:99.20, gas97:110.50, diesel:106.30, premDiesel:109.80, kerosene:96.50, verified:true, reporter:'Nena B.', time: Date.now()-3600000*11, votes:16, img:'', lat:10.72, lng:122.56 },
+  { id:8, brand:'Petron', city:'General Santos City', address:'National Highway, Calumpang', region:'Region XII — SOCCSKSARGEN', gas91:97.80, gas95:102.10, gas97:0, diesel:110.50, premDiesel:114.00, kerosene:98.80, verified:false, reporter:'Rodel C.', time: Date.now()-3600000*14, votes:7, img:'', lat:6.11, lng:125.17 },
+  { id:9, brand:'Flying V', city:'Pasig City', address:'C5 Road, Brgy. Ugong', region:'NCR — Metro Manila', gas91:85.21, gas95:89.50, gas97:0, diesel:100.45, premDiesel:104.20, kerosene:0, verified:true, reporter:'Ryan M.', time: Date.now()-3600000*4, votes:11, img:'', lat:14.57, lng:121.07 },
+  { id:10, brand:'PTT', city:'Quezon City', address:'Commonwealth Ave., Batasan Hills', region:'NCR — Metro Manila', gas91:90.50, gas95:95.10, gas97:0, diesel:102.30, premDiesel:106.10, kerosene:0, verified:false, reporter:'Ana P.', time: Date.now()-3600000*6, votes:9, img:'', lat:14.70, lng:121.09 },
+  { id:11, brand:'Shell', city:'Calbayog City', address:'Brgy. Oquendo, Calbayog City', region:'Region VIII — Eastern Visayas', gas91:97.20, gas95:101.50, gas97:112.80, diesel:108.90, premDiesel:112.60, kerosene:98.20, verified:true, reporter:'Emmanuel G.', time: Date.now()-3600000*0.5, votes:18, img:'', lat:12.07, lng:124.61 },
+  { id:12, brand:'Caltex', city:'Calbayog City', address:'Calbayog City Proper', region:'Region VIII — Eastern Visayas', gas91:98.10, gas95:102.30, gas97:0, diesel:111.20, premDiesel:114.80, kerosene:99.00, verified:false, reporter:'Local Reporter', time: Date.now()-3600000*2, votes:6, img:'', lat:12.068, lng:124.598 },
 ];
 
 const REGIONAL = [
-  { region:'NCR — Metro Manila', flag:'🏙️', diesel:54.30, gas91:58.25, gas95:63.00, kerosene:0, change:+0.50 },
-  { region:'Region I — Ilocos', flag:'🌾', diesel:53.95, gas91:57.80, gas95:62.40, kerosene:49.70, change:-0.20 },
-  { region:'Region III — Central Luzon', flag:'🌾', diesel:54.10, gas91:57.90, gas95:62.50, kerosene:49.80, change:+0.30 },
-  { region:'Region IV-A — CALABARZON', flag:'🏭', diesel:54.20, gas91:58.00, gas95:62.60, kerosene:0, change:+0.10 },
-  { region:'Region VII — Central Visayas', flag:'🌊', diesel:54.00, gas91:57.75, gas95:62.35, kerosene:49.60, change:-0.10 },
-  { region:'Region VIII — Eastern Visayas', flag:'🌺', diesel:53.80, gas91:57.70, gas95:62.10, kerosene:50.10, change:+0.20 },
-  { region:'Region XI — Davao Region', flag:'🦅', diesel:53.65, gas91:57.40, gas95:62.00, kerosene:49.50, change:-0.30 },
-  { region:'BARMM', flag:'☪️', diesel:53.50, gas91:57.20, gas95:61.80, kerosene:49.30, change:+0.00 },
+  { region:'NCR — Metro Manila', flag:'🏙️', diesel:101.78, gas91:88.87, gas95:94.40, kerosene:92.50, change:-24.94 },
+  { region:'Region I — Ilocos', flag:'🌾', diesel:104.50, gas91:92.10, gas95:96.80, kerosene:94.20, change:-24.20 },
+  { region:'Region II — Cagayan Valley', flag:'🌾', diesel:105.20, gas91:93.40, gas95:97.90, kerosene:95.10, change:-23.80 },
+  { region:'Region III — Central Luzon', flag:'🌾', diesel:102.80, gas91:90.50, gas95:95.20, kerosene:93.40, change:-24.50 },
+  { region:'Region IV-A — CALABARZON', flag:'🏭', diesel:103.40, gas91:91.20, gas95:95.80, kerosene:0, change:-24.10 },
+  { region:'Region V — Bicol', flag:'🌋', diesel:107.30, gas91:95.60, gas95:99.90, kerosene:96.80, change:-23.50 },
+  { region:'Region VI — Western Visayas', flag:'🌊', diesel:106.30, gas91:94.80, gas95:99.20, kerosene:96.50, change:-23.20 },
+  { region:'Region VII — Central Visayas', flag:'🌊', diesel:106.80, gas91:95.10, gas95:99.45, kerosene:97.30, change:-22.90 },
+  { region:'Region VIII — Eastern Visayas', flag:'🌺', diesel:109.50, gas91:97.50, gas95:101.75, kerosene:98.50, change:-22.50 },
+  { region:'Region X — Northern Mindanao', flag:'🌿', diesel:108.20, gas91:96.40, gas95:100.80, kerosene:97.60, change:-22.20 },
+  { region:'Region XI — Davao Region', flag:'🦅', diesel:108.40, gas91:96.20, gas95:100.60, kerosene:97.80, change:-22.00 },
+  { region:'Region XII — SOCCSKSARGEN', flag:'🦅', diesel:110.50, gas91:97.80, gas95:102.10, kerosene:98.80, change:-21.80 },
+  { region:'BARMM', flag:'☪️', diesel:112.30, gas91:99.10, gas95:103.50, kerosene:100.20, change:-21.50 },
 ];
 
 // Version check — clears stale cache from old broken builds
-const DATA_VERSION = 'v3';
+const DATA_VERSION = 'v5';
 if(localStorage.getItem('gwph_version') !== DATA_VERSION) {
   localStorage.removeItem('gwph_reports');
   localStorage.setItem('gwph_version', DATA_VERSION);
